@@ -1,0 +1,64 @@
+
+# ROBO DE OFERTAS SHOPEE
+# Instale antes: pip install python-telegram-bot
+
+import os
+from telegram import Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes
+)
+
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+
+async def inicio(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(
+        "🛍️ ROBÔ DE OFERTAS\n\n"
+        "Para criar um anúncio, use:\n"
+        "/oferta Nome do produto | Preço | Link | Descrição\n\n"
+        "Exemplo:\n"
+        "/oferta Bolsa feminina | R$ 29,90 | "
+        "https://seu-link-de-afiliado | Linda e prática!"
+    )
+
+async def oferta(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    texto = " ".join(context.args)
+    partes = [p.strip() for p in texto.split("|")]
+
+    if len(partes) != 4:
+        await update.message.reply_text(
+            "Use: /oferta Produto | Preço | Link | Descrição"
+        )
+        return
+
+    nome, preco, link, descricao = partes
+
+    if not link.startswith(("https://", "http://")):
+        await update.message.reply_text("Informe um link válido.")
+        return
+
+    anuncio = (
+        f"🔥 OFERTA ENCONTRADA! 🛍️\n\n"
+        f"✨ {nome}\n"
+        f"💰 Preço informado: {preco}\n"
+        f"💖 {descricao}\n\n"
+        f"🛒 Confira aqui:\n{link}\n\n"
+        f"📌 Divulgação de afiliado."
+    )
+
+    await update.message.reply_text(anuncio)
+
+def main():
+    if not TOKEN:
+        raise RuntimeError(
+            "Configure a variável TELEGRAM_BOT_TOKEN."
+        )
+
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", inicio))
+    app.add_handler(CommandHandler("oferta", oferta))
+    app.run_polling()
+
+if __name__ == "__main__":
+    main()
